@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ricrypt</title>
+    <style>
+        h1 {
+            font-family: monospace;
+        }
+        body {
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #text {
+            margin: 20px 0;
+        }
+        input {
+            font-family: monospace;
+            padding: 10px;
+            margin: 5px;
+            width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        textarea {
+            font-family: monospace;
+            padding: 10px;
+            margin: 5px;
+            width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            height: auto;
+            text-align: center;
+        }
+        #buttons {
+            margin: 20px 0;
+        }
+        button:hover {
+            filter: brightness(95%);
+        }
+        button:active {
+            filter: brightness(85%);
+        }
+        button {
+            font-family: monospace;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 45.3%;
+            cursor: pointer;
+        }
+        .blue {
+            background-color: #269dd9;
+            color: white;
+        }
+        .red {
+            background-color: rgb(214, 66, 56);
+            color: white;
+        }
+        .green {
+            background-color: rgb(43, 183, 43);
+            color: white;
+        }
+        .purple {
+            background-color: rgb(186, 52, 175);
+            color: white;
+        }
+        #copy-button {
+            width: 30%;
+            margin-top: 15px;
+        }
+        #download-button {
+            width: 30%;
+            margin-top: 15px;
+        }
+        #output {
+            padding: 10px;
+            margin: 5px;
+            width: 90%;
+        }
+        #outputArea {
+            margin: 20px 0;
+        }
+    </style>
+    <script src="ricrypt.js" type="text/javascript"></script>
+    <script>
+        window.acK = "";
+        let keyTimeout;
+
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = "auto";
+            textarea.style.height = textarea.scrollHeight + "px";
+        }
+
+        function handleKeyInput(event) {
+            const input = event.target;
+            const inputValue = input.value;
+
+            // Prevent further propagation
+            event.stopPropagation();
+
+            // Clear the existing timeout if any
+            if (keyTimeout) {
+                clearTimeout(keyTimeout);
+            }
+
+            // Detect if the user pressed the delete key
+            if (event.inputType === 'deleteContentBackward') {
+                window.acK = window.acK.slice(0, -1);
+                input.value = "*".repeat(inputValue.length);
+                return;
+            }
+
+            // Get the last character typed
+            const lastChar = inputValue.charAt(inputValue.length - 1);
+
+            // Update the actual key
+            window.acK += lastChar;
+
+            // Replace the input value with asterisks except for the last character
+            input.value = "*".repeat(inputValue.length - 1) + lastChar;
+
+            // Set a timeout to replace the last character with an asterisk after 2 seconds
+            keyTimeout = setTimeout(() => {
+                input.value = "*".repeat(inputValue.length);
+            }, 2000);
+        }
+
+        function copyOutput() {
+            const output = document.querySelector("textarea[name='output']");
+            let text = output.value;
+            if (text === "") {
+                text = "No output";
+            }
+            navigator.clipboard.writeText(text);
+        }
+
+        function downloadOutput() {
+            const output = document.querySelector("textarea[name='output']");
+            let text = output.value;
+            if (text === "") {
+                text = "No output";
+            }
+            const blob = new Blob([text], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "encrypted.txt";
+            a.click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                alert("No file selected.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+                // if the content contains non ASCII characters, alert the user
+                if (!/^[\x00-\x7F]*$/.test(content)) {
+                    alert("File contains non-ASCII characters.");
+                    return;
+                }
+                const inputText = document.getElementById("inputText");
+                inputText.value = content;
+                adjustTextareaHeight(inputText);
+            };
+            reader.onerror = function () {
+                alert("Error reading file.");
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>ricrypt</h1>
+        <!-- text input box -->
+        <div id="text">
+            <textarea
+                type="text"
+                name="text"
+                id="inputText"
+                placeholder="Input text"
+                spellcheck="false"
+                oninput="adjustTextareaHeight(this)"
+            ></textarea>
+            <!-- key input box -->
+            <input
+                type="text"
+                name="key"
+                id="keyInput"
+                placeholder="Encryption key"
+                maxlength="10"
+                spellcheck="false"
+                oninput="handleKeyInput(event)"
+            />
+        </div>
+        <!-- file picker -->
+        <input
+            type="file"
+            id="fileInput"
+            accept=".txt"
+            onchange="handleFileUpload(event)"
+        />
+        <!-- encrypt button -->
+        <div id="buttons">
+            <button id="encrypt-button" class="blue">Encrypt</button>
+            <!-- decrypt button -->
+            <button id="decrypt-button" class="red">Decrypt</button>
+        </div>
+        <!-- output box -->
+        <div id="outputArea">
+            <textarea
+                type="text"
+                name="output"
+                id="output"
+                placeholder="Output"
+                spellcheck="false"
+                disabled
+            ></textarea>
+            <button id="copy-button" class="green" onclick="copyOutput()">
+                Copy
+            </button>
+            <button
+                id="download-button"
+                class="purple"
+                onclick="downloadOutput()"
+            >
+                Download
+            </button>
+        </div>
+    </div>
+</body>
+</html>
