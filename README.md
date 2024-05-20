@@ -1,6 +1,8 @@
 # ricrypt
 A string transformer web-app with file upload &amp; download capabilities.
 
+<img src="ricrypt.png">
+
 To the untrained eye, it might seem like an encryption algorithm, since this specific order of transformations has never been done before, so it's unlikely anyone could "guess" these transformations. However, this "encryption" is still likely to be cracked by an advanced cryptographer, since it is still vulnerable to frequency analysis due to it's root of Vigenere cipher. So, in reality, it is just a fun project I made to do some string transformations.
 
 ## The Algorithm
